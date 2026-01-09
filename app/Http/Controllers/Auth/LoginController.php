@@ -69,30 +69,6 @@ class LoginController extends Controller
             ], 401);
         }
 
-        // 🧠 Inferencia de paneles (NO persistente)
-        $panels = [];
-
-        // Panel CLIENTE
-        if (method_exists($user, 'client') && $user->client()->exists()) {
-            $panels[] = 'client';
-        }
-
-        // Panel EMPRESA (admin o técnico)
-        if (
-            (method_exists($user, 'companyUsers') && $user->companyUsers()->exists()) ||
-            (method_exists($user, 'technicians') && $user->technicians()->exists())
-        ) {
-            $panels[] = 'company';
-        }
-
-        // Panel RUBRO
-        if (method_exists($user, 'rubroUser') && $user->rubroUser()->exists()) {
-            $panels[] = 'rubro';
-        }
-
-        // 🧭 Panel activo por defecto
-        $activePanel = $panels[0] ?? null;
-
         return response()->json([
             'user' => [
                 'id'     => $user->id,
@@ -100,8 +76,6 @@ class LoginController extends Controller
                 'email'  => $user->email,
                 'avatar' => $user->avatar,
             ],
-            'panels' => $panels,
-            'active_panel' => $activePanel,
         ]);
     }
 

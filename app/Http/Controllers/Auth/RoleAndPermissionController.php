@@ -136,7 +136,7 @@ class RoleAndPermissionController extends Controller
     }
 
 
-    public function getRolesRubro()
+    public function getRoles()
     {
         $roles = Role::where('guard_name', 'rubro')
             ->orderBy('name')
@@ -148,7 +148,7 @@ class RoleAndPermissionController extends Controller
         ]);
     }
 
-    public function getPermissionsRubro()
+    public function getPermissions()
     {
         $permissions = Permission::where('guard_name', 'rubro')
             ->orderBy('name')

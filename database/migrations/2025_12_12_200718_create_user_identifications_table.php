@@ -24,14 +24,13 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('user_id')
-                  ->constrained('users')
-                  ->cascadeOnDelete();
+                ->constrained('users')
+                ->cascadeOnDelete();
 
             $table->foreignId('identification_type_id')
-                  ->constrained('identification_types')
-                  ->cascadeOnDelete();
+                ->constrained('identification_types')
+                ->cascadeOnDelete();
 
-            // Datos del documento
             $table->string('number_hash');
             $table->text('number_encrypted');
 
@@ -40,11 +39,13 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // Índices importantes
             $table->index('user_id');
-            $table->index('identification_type_id');
-            $table->index('number_hash');
             $table->index('expires_at');
+
+            $table->unique(
+                ['identification_type_id', 'number_hash'],
+                'unique_identification_number'
+            );
         });
     }
 

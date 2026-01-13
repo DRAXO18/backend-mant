@@ -17,8 +17,7 @@ return new class extends Migration {
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->restrictOnDelete()
-                ->cascadeOnUpdate()
-                ->unique();
+                ->cascadeOnUpdate();
 
             $table->foreignId('ubigeo_id')
                 ->nullable()

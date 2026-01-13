@@ -73,7 +73,6 @@ return new class extends Migration {
                 ->cascadeOnUpdate();
         });
 
-
         Schema::create('service_details', function (Blueprint $table) {
             // 1-1 satellite, heavy text here
             $table->foreignId('service_id')

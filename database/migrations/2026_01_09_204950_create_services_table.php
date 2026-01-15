@@ -38,7 +38,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('client_id');
 
             $table->dateTime('service_date');
-            $table->unsignedInteger('mileage_at_service')->index();
+            $table->unsignedInteger('   ')->index();
 
             // 0=draft,1=open,2=in_progress,3=completed,4=cancelled
             $table->tinyInteger('status')

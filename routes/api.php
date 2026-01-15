@@ -7,6 +7,8 @@ use App\Http\Controllers\Profile\ClientController;
 use App\Http\Controllers\Profile\OwnerController;
 use App\Http\Controllers\Profile\AdminController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ServiceTypeController;
 
 use Illuminate\Auth\Events\Login;
 
@@ -24,8 +26,8 @@ Route::middleware(['auth:api'])->group(function () {
     });
 
     Route::prefix('owners')->group(function () {
-        Route::get('/', [OwnerController::class, 'index']);
         Route::post('/', [OwnerController::class, 'store']);
+        Route::get('/', [OwnerController::class, 'index']);
         Route::patch('{id}', [OwnerController::class, 'update']);
         Route::delete('{id}', [OwnerController::class, 'destroy']);
     });
@@ -42,6 +44,21 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('/', [VehicleController::class, 'store']);
         Route::patch('/{id}', [VehicleController::class, 'update']);
         Route::delete('/{id}', [VehicleController::class, 'destroy']);
+    });
+
+    Route::prefix('services')->group(function () {
+        Route::get('/', [ServiceController::class, 'index']);
+        Route::post('/', [ServiceController::class, 'store']);
+        Route::post('/detail', [ServiceController::class, 'serviceDetailsStore']);
+        Route::patch('/{id}', [ServiceController::class, 'update']);
+        Route::delete('/{id}', [ServiceController::class, 'destroy']);
+    });
+    
+     Route::prefix('services-type')->group(function () {
+        Route::get('/', [ServiceTypeController::class, 'index']);
+        Route::post('/', [ServiceTypeController::class, 'store']);
+        Route::patch('/{id}', [ServiceTypeController::class, 'update']);
+        Route::delete('/{id}', [ServiceTypeController::class, 'destroy']);
     });
 
     // Roles y Permisos

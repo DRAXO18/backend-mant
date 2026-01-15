@@ -111,11 +111,7 @@ class OwnerController extends Controller
             'data' => $result,
         ], 201);
     }
-
-
-    /**
-     * Update owner user fields (owner has no extra fields).
-     */
+    
     public function update(Request $request, int $id)
     {
         $owner = Owner::with('user')->findOrFail($id);

@@ -9,10 +9,13 @@ use App\Http\Controllers\Profile\AdminController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServiceTypeController;
+use App\Http\Controllers\ProductController;
 
 use Illuminate\Auth\Events\Login;
 
 Route::post('/login', [LoginController::class, 'login'])->name('login');
+
+Route::get('kardex/productos', [ProductController::class, 'index']);
 
 Route::middleware(['auth:api'])->group(function () {
     Route::get('/me', [LoginController::class, 'me']);

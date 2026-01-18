@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Http;
+use App\Models\CompanyUser;
 
 class AdminController extends Controller
 {
@@ -46,24 +48,131 @@ class AdminController extends Controller
 
     public function store(Request $request)
     {
+        /*
+    |--------------------------------------------------------------------------
+    | 0️⃣ Contexto del owner (inyectado por middleware)
+    |--------------------------------------------------------------------------
+    */
+        $ownerSupabaseUid = $request->attributes->get('supabase_uid');
+        $accessToken = $request->cookie('sb_access_token');
+
+        if (! $ownerSupabaseUid || ! $accessToken) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Owner en Laravel
+        $owner = User::where('supabase_user_id', $ownerSupabaseUid)->firstOrFail();
+
+        // Empresa del owner en Laravel (solo para relación local)
+        $companyLaravel = $owner->companies()->first();
+        if (! $companyLaravel) {
+            return response()->json(['message' => 'Empresa no encontrada'], 403);
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | 1️⃣ Obtener empresa REAL desde Supabase (RPC get_my_company)
+    |--------------------------------------------------------------------------
+    */
+        $empresaResp = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $accessToken,
+            'apikey'        => config('services.supabase.key'),
+            'Content-Type'  => 'application/json',
+        ])->post(
+            rtrim(config('services.supabase.url'), '/') . '/rest/v1/rpc/get_my_company'
+        );
+
+        if (! $empresaResp->successful() || empty($empresaResp->json())) {
+            return response()->json(['message' => 'Empresa Supabase no encontrada'], 403);
+        }
+
+        $empresaSb = $empresaResp->json()[0];
+        $empresaSupabaseId = $empresaSb['empresa_id']; // 👈 ESTE es el ID correcto
+
+        /*
+    |--------------------------------------------------------------------------
+    | 2️⃣ Validación
+    |--------------------------------------------------------------------------
+    */
         $validated = $request->validate([
-            // user fields
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone'    => ['nullable', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:8'],
-
-            // admin fields
-            'uid' => ['nullable', 'string', 'max:50', 'unique:admins,uid'],
+            'uid'      => ['nullable', 'string', 'max:50', 'unique:admins,uid'],
         ]);
 
-        $result = DB::transaction(function () use ($validated) {
+        /*
+    |--------------------------------------------------------------------------
+    | 3️⃣ Crear usuario en Supabase Auth
+    |--------------------------------------------------------------------------
+    */
+        $sbResp = Http::withHeaders([
+            'Authorization' => 'Bearer ' . config('services.supabase.service_role_key'),
+            'apikey'        => config('services.supabase.service_role_key'),
+            'Content-Type'  => 'application/json',
+        ])->post(
+            rtrim(config('services.supabase.url'), '/') . '/auth/v1/admin/users',
+            [
+                'email' => $validated['email'],
+                'password' => $validated['password'],
+                'email_confirm' => true,
+            ]
+        );
+
+        if (! $sbResp->successful()) {
+            return response()->json([
+                'message' => 'Error creando usuario en Supabase',
+                'error' => $sbResp->json(),
+            ], 500);
+        }
+
+        $supabaseUserId = $sbResp->json()['id'];
+
+        /*
+    |--------------------------------------------------------------------------
+    | 4️⃣ Crear usuario de dominio en Supabase (RPC)
+    |--------------------------------------------------------------------------
+    */
+        $rpcResp = Http::withHeaders([
+            'Authorization' => 'Bearer ' . config('services.supabase.service_role_key'),
+            'apikey'        => config('services.supabase.service_role_key'),
+            'Content-Type'  => 'application/json',
+        ])->post(
+            rtrim(config('services.supabase.url'), '/') . '/rest/v1/rpc/create_usuario_y_asignar_empresa',
+            [
+                'p_auth_id'    => $supabaseUserId,
+                'p_email'      => $validated['email'],
+                'p_nombre'     => $validated['name'],
+                'p_empresa_id' => $empresaSupabaseId,
+                'p_tipouser'   => 'admin',
+            ]
+        );
+
+        if (! $rpcResp->successful()) {
+            return response()->json([
+                'message' => 'Error creando usuario de dominio en Supabase',
+                'error' => $rpcResp->json(),
+            ], 500);
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | 5️⃣ Crear espejo en Laravel (transacción)
+    |--------------------------------------------------------------------------
+    */
+        $result = DB::transaction(function () use (
+            $validated,
+            $supabaseUserId,
+            $companyLaravel
+        ) {
+
             $user = User::create([
-                'name'   => $validated['name'],
-                'email'  => $validated['email'],
-                'phone'  => $validated['phone'] ?? null,
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? null,
                 'status' => 1,
-                'password' => Hash::make($validated['password']),
+                'supabase_user_id' => $supabaseUserId,
             ]);
 
             $admin = Admin::create([
@@ -71,15 +180,26 @@ class AdminController extends Controller
                 'uid' => $validated['uid'] ?? $this->generateAdminUid(),
             ]);
 
+            CompanyUser::firstOrCreate(
+                [
+                    'company_id' => $companyLaravel->id,
+                    'user_id' => $user->id,
+                ],
+                [
+                    'status' => 1,
+                ]
+            );
+
             return $admin->load('user');
         });
 
         return response()->json([
             'ok' => true,
-            'message' => 'Admin created successfully.',
+            'message' => 'Admin creado correctamente',
             'data' => $result,
         ], 201);
     }
+
 
     public function update(Request $request, int $id)
     {

@@ -11,12 +11,35 @@ return new class extends Migration
      */
     public function up(): void
     {
+
+        // Companies
+        Schema::create('companies', function (Blueprint $table) {
+            $table->id();
+
+            $table->string('name')
+                ->index();
+
+            $table->tinyInteger('status')
+                ->default(1)
+                ->index()
+                ->comment('0=inactive,1=active,2=suspended,3=deleted');
+
+            $table->timestamps();
+            $table->index('created_at');
+        });
+
+        // Users
         Schema::create('users', function (Blueprint $table) {
             $table->id();
 
+            $table->uuid('supabase_user_id')
+                ->nullable() // por seeders antiguos
+                ->unique()
+                ->comment('User ID from Supabase Auth');
+
             $table->string('name');
 
-            $table->string('email')->nullable()->unique(); 
+            $table->string('email')->nullable()->unique();
 
             $table->string('password')->nullable();
 
@@ -47,6 +70,29 @@ return new class extends Migration
             $table->index('created_at');
         });
 
+        Schema::create('company_user', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('company_id')
+                ->constrained('companies')
+                ->cascadeOnDelete();
+
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+
+            $table->tinyInteger('status')
+                ->default(1)
+                ->index()
+                ->comment('0=inactive,1=active,2=suspended');
+
+            $table->timestamps();
+            $table->index('created_at');
+
+            // 🚫 evita duplicados
+            $table->unique(['company_id', 'user_id']);
+        });
+
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
@@ -71,5 +117,7 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('company_user');
+        Schema::dropIfExists('companies');
     }
 };

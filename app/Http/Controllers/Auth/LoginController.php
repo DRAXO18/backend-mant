@@ -5,48 +5,81 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cookie;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Services\AuthBootstrapService;
+
 
 class LoginController extends Controller
 {
-    // LOGIN NORMAL → GUARDA JWT EN COOKIE httpOnly
-    public function login(Request $request)
+
+    public function login(Request $request, AuthBootstrapService $bootstrap)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|string|min:6',
         ]);
 
-        $credentials = $request->only('email', 'password');
+        // 1️⃣ Login Supabase (IGUAL)
+        $response = Http::withHeaders([
+            'apikey'       => config('services.supabase.key'),
+            'Content-Type' => 'application/json',
+        ])->post(
+            config('services.supabase.url') . '/auth/v1/token?grant_type=password',
+            [
+                'email'    => $request->email,
+                'password' => $request->password,
+            ]
+        );
 
-
-        if (!$token = JWTAuth::attempt($credentials)) {
+        if (! $response->successful()) {
             return response()->json([
                 'message' => 'Credenciales incorrectas'
             ], 401);
         }
 
-        // ✅ Crear cookie httpOnly con el JWT
-        $cookie = Cookie::make(
-            'token',        // nombre
-            $token,         // valor (JWT)
-            60 * 24 * 7,    // 7 días
-            '/',            // path
-            null,           // domain
-            false,          // secure (true en HTTPS)
-            true,           // ✅ httpOnly
+        $data = $response->json();
+
+        $accessToken  = $data['access_token'];
+        $refreshToken = $data['refresh_token'];
+        $expiresIn    = $data['expires_in'];
+
+        // 2️⃣ 👉 NUEVO: bootstrap Laravel (NO rompe nada)
+        $bootstrap->bootstrap($accessToken);
+
+        // 3️⃣ Cookies (IGUAL)
+        $accessCookie = Cookie::make(
+            'sb_access_token',
+            $accessToken,
+            intval($expiresIn / 60),
+            '/',
+            null,
+            true,
+            true,
+            false,
+            'Strict'
+        );
+
+        $refreshCookie = Cookie::make(
+            'sb_refresh_token',
+            $refreshToken,
+            60 * 24 * 30,
+            '/',
+            null,
+            true,
+            true,
             false,
             'Strict'
         );
 
         return response()->json([
-            'message' => 'Usuario logueado exitosamente',
-            'user'    => Auth::user()
-        ])->withCookie($cookie);
+            'message' => 'Login exitoso',
+        ])->withCookie($accessCookie)
+            ->withCookie($refreshCookie);
     }
 
-    // LOGOUT → INVALIDA JWT + BORRA COOKIE
+
     public function logout()
     {
         JWTAuth::invalidate(JWTAuth::getToken());
@@ -58,7 +91,6 @@ class LoginController extends Controller
         ])->withCookie($cookie);
     }
 
-    // PERFIL DEL USUARIO (PROTEGIDO)
     public function me(Request $request)
     {
         $user = Auth::user() ?? $request->user();
@@ -76,14 +108,6 @@ class LoginController extends Controller
                 'email'  => $user->email,
                 'avatar' => $user->avatar,
             ],
-        ]);
-    }
-
-    public function test()
-    {
-        return response()->json([
-            'success' => true,
-            'message' => 'El usuario tiene acceso al panel COMPANY',
         ]);
     }
 }

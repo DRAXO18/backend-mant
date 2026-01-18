@@ -15,13 +15,19 @@ return new class extends Migration {
             $table->id();
 
             $table->unsignedBigInteger('owner_id');
-
             $table->foreign('owner_id', 'fk_vehicles_owner_id')
                 ->references('id')
                 ->on('owners')
                 ->restrictOnDelete()
                 ->cascadeOnUpdate();
 
+            $table->foreignId('company_id')
+                ->constrained('companies')
+                ->cascadeOnDelete(); // ✅ sin index()
+
+            $table->foreignId('created_by')
+                ->constrained('users')
+                ->restrictOnDelete(); // ✅ sin index()
 
             $table->string('plate_number', 15)->unique();
             $table->string('brand', 80)->index();
@@ -35,18 +41,25 @@ return new class extends Migration {
 
             $table->timestamps();
             $table->softDeletes();
-
         });
 
+
         Schema::create('vehicle_details', function (Blueprint $table) {
-            // 1-1 satellite, keep it slim
             $table->foreignId('vehicle_id')
                 ->constrained('vehicles')
                 ->cascadeOnDelete()
                 ->cascadeOnUpdate()
                 ->primary();
 
-            $table->string('usage_type', 20)->nullable()->index(); // PRIVATE / PUBLIC
+            $table->foreignId('company_id')
+                ->constrained('companies')
+                ->cascadeOnDelete(); // ✅
+
+            $table->foreignId('created_by')
+                ->constrained('users')
+                ->restrictOnDelete(); // ✅
+
+            $table->string('usage_type', 20)->nullable()->index();
             $table->boolean('has_gnv')->default(false)->index();
             $table->boolean('has_glp')->default(false)->index();
 

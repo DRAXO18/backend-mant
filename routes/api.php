@@ -14,10 +14,12 @@ use App\Http\Controllers\ProductController;
 use Illuminate\Auth\Events\Login;
 
 Route::post('/login', [LoginController::class, 'login'])->name('login');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('kardex/productos', [ProductController::class, 'index']);
+Route::post('kardex/productos', [ProductController::class, 'store']);
 
-Route::middleware(['auth:api'])->group(function () {
+Route::middleware(['supabase.auth'])->group(function () {
     Route::get('/me', [LoginController::class, 'me']);
     Route::post('/logout', [LoginController::class, 'logout']);
 

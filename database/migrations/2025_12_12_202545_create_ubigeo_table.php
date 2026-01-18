@@ -18,9 +18,17 @@ return new class extends Migration
             $table->string('province');    // Huancayo
             $table->string('district');    // El Tambo
 
+            $table->foreignId('company_id')
+                ->constrained('companies')
+                ->cascadeOnDelete();
+
+            $table->foreignId('created_by')
+                ->constrained('users')
+                ->restrictOnDelete();
+
             $table->timestamps();
 
-            // Índices
+            // Índices manuales (estos sí están bien)
             $table->index('department');
             $table->index('province');
             $table->index('district');

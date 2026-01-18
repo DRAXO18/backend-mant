@@ -25,6 +25,7 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'phone',
         'status',
+        'supabase_user_id',
         'google_id',
         'avatar',
         'email_verified_at',
@@ -85,5 +86,11 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasOne(Admin::class);
     }
-    
+
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_user')
+            ->withPivot(['status'])
+            ->withTimestamps();
+    }
 }

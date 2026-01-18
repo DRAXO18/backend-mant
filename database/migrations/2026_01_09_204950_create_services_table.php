@@ -18,6 +18,14 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->string('category', 60)->nullable()->index();
 
+            $table->foreignId('company_id')
+                ->constrained('companies')
+                ->cascadeOnDelete(); // ✅ sin index
+
+            $table->foreignId('created_by')
+                ->constrained('users')
+                ->restrictOnDelete(); // ✅ sin index
+
             $table->tinyInteger('status')
                 ->default(1)
                 ->index()
@@ -27,33 +35,42 @@ return new class extends Migration {
             $table->softDeletes();
         });
 
+
         Schema::create('services', function (Blueprint $table) {
             $table->engine = 'InnoDB';
 
             $table->id();
 
-            // Foreign key columns
             $table->unsignedBigInteger('vehicle_id');
             $table->unsignedBigInteger('service_type_id');
             $table->unsignedBigInteger('client_id');
 
             $table->dateTime('service_date');
-            $table->unsignedInteger('   ')->index();
 
-            // 0=draft,1=open,2=in_progress,3=completed,4=cancelled
+            // 👇 elimina la columna inválida
+            // $table->unsignedInteger('   ')->index(); ❌ ELIMINADO
+
             $table->tinyInteger('status')
                 ->default(1)
                 ->comment('0=draft,1=open,2=in_progress,3=completed,4=cancelled');
 
+            $table->foreignId('company_id')
+                ->constrained('companies')
+                ->cascadeOnDelete(); // ✅
+
+            $table->foreignId('created_by')
+                ->constrained('users')
+                ->restrictOnDelete(); // ✅
+
             $table->timestamps();
             $table->softDeletes();
 
-            // Índices reales (SIN duplicados)
+            // Índices reales (correctos)
             $table->index(['vehicle_id', 'service_date'], 'idx_services_vehicle_date');
             $table->index(['client_id', 'service_date'], 'idx_services_client_date');
             $table->index(['service_type_id', 'service_date'], 'idx_services_type_date');
 
-            // Foreign keys con nombre explícito (evita constraint "1")
+            // Foreign keys explícitas
             $table->foreign('vehicle_id', 'fk_services_vehicle_id')
                 ->references('id')
                 ->on('vehicles')
@@ -74,12 +91,19 @@ return new class extends Migration {
         });
 
         Schema::create('service_details', function (Blueprint $table) {
-            // 1-1 satellite, heavy text here
             $table->foreignId('service_id')
                 ->constrained('services')
                 ->cascadeOnDelete()
                 ->cascadeOnUpdate()
                 ->primary();
+
+            $table->foreignId('company_id')
+                ->constrained('companies')
+                ->cascadeOnDelete(); // ✅
+
+            $table->foreignId('created_by')
+                ->constrained('users')
+                ->restrictOnDelete(); // ✅
 
             $table->text('observations')->nullable();
             $table->text('recommendation')->nullable();

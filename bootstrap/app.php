@@ -18,11 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->api(append: [
-            \App\Http\Middleware\JWTFromCookie::class, // Extrae el token desde cookie
+            // \App\Http\Middleware\JWTFromCookie::class, 
+            // \App\Http\Middleware\SupabaseAuth::class, 
         ]);
 
         $middleware->alias([
-            'panel' => \App\Http\Middleware\PanelAccess::class,
+            'supabase.auth' => \App\Http\Middleware\SupabaseAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

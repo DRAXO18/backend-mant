@@ -79,17 +79,36 @@ class LoginController extends Controller
             ->withCookie($refreshCookie);
     }
 
-
-    public function logout()
+    public function bootstrap(Request $request, AuthBootstrapService $bootstrap)
     {
-        JWTAuth::invalidate(JWTAuth::getToken());
+        $token = $request->bearerToken();
 
-        $cookie = Cookie::forget('token');
+        if (! $token) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $bootstrap->bootstrap($token);
 
         return response()->json([
-            'message' => 'Sesión cerrada'
-        ])->withCookie($cookie);
+            'ok' => true,
+            'message' => 'Bootstrap completado'
+        ]);
     }
+
+    public function logout(Request $request)
+    {
+        // 1️⃣ Borrar cookies Supabase
+        $accessCookie = Cookie::forget('sb_access_token');
+        $refreshCookie = Cookie::forget('sb_refresh_token');
+
+        return response()->json([
+            'message' => 'Sesión cerrada',
+            // frontend de mantenimiento sabrá que debe redirigir a Kardex
+            'logout_kardex' => true,
+        ])->withCookie($accessCookie)
+            ->withCookie($refreshCookie);
+    }
+
 
     public function me(Request $request)
     {

@@ -16,13 +16,16 @@ use Illuminate\Auth\Events\Login;
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+
 Route::get('kardex/productos', [ProductController::class, 'index']);
 Route::post('kardex/productos', [ProductController::class, 'store']);
 
+
 Route::middleware(['supabase.auth'])->group(function () {
+    Route::post('/ecosystem/bootstrap', [LoginController::class, 'bootstrap']);
+
     Route::get('/me', [LoginController::class, 'me']);
     Route::post('/logout', [LoginController::class, 'logout']);
-
     Route::prefix('clients')->group(function () {
         Route::get('/', [ClientController::class, 'index']);
         Route::post('/', [ClientController::class, 'store']);
@@ -58,8 +61,8 @@ Route::middleware(['supabase.auth'])->group(function () {
         Route::patch('/{id}', [ServiceController::class, 'update']);
         Route::delete('/{id}', [ServiceController::class, 'destroy']);
     });
-    
-     Route::prefix('services-type')->group(function () {
+
+    Route::prefix('services-type')->group(function () {
         Route::get('/', [ServiceTypeController::class, 'index']);
         Route::post('/', [ServiceTypeController::class, 'store']);
         Route::patch('/{id}', [ServiceTypeController::class, 'update']);

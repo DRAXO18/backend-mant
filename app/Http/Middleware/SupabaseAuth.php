@@ -9,16 +9,22 @@ class SupabaseAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        $token = $request->cookie('sb_access_token');
+        // 1️⃣ Buscar token en Authorization Bearer
+        $token = $request->bearerToken();
 
-        // 1️⃣ Debe existir token
-        if (!$token) {
+        // 2️⃣ Si no hay bearer, buscar cookie
+        if (! $token) {
+            $token = $request->cookie('sb_access_token');
+        }
+
+        // 3️⃣ Si no hay token en ningún lado → fuera
+        if (! $token) {
             return response()->json([
                 'message' => 'No autenticado'
             ], 401);
         }
 
-        // 2️⃣ JWT debe tener 3 partes
+        // 4️⃣ JWT debe tener 3 partes
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
             return response()->json([
@@ -27,41 +33,33 @@ class SupabaseAuth
         }
 
         try {
-            // 3️⃣ Decodificar payload (base64url)
             $payload = json_decode(
                 base64_decode(strtr($parts[1], '-_', '+/')),
                 true
             );
 
             if (!is_array($payload)) {
-                return response()->json([
-                    'message' => 'Token inválido'
-                ], 401);
+                return response()->json(['message' => 'Token inválido'], 401);
             }
 
-            // 4️⃣ Expiración (opcional pero recomendable)
+            // 5️⃣ Expiración
             if (isset($payload['exp']) && $payload['exp'] < time()) {
-                return response()->json([
-                    'message' => 'Token expirado'
-                ], 401);
+                return response()->json(['message' => 'Token expirado'], 401);
             }
 
-            // 5️⃣ Debe tener sub (UID Supabase)
+            // 6️⃣ UID Supabase
             if (empty($payload['sub'])) {
-                return response()->json([
-                    'message' => 'Token inválido'
-                ], 401);
+                return response()->json(['message' => 'Token inválido'], 401);
             }
 
-            // 6️⃣ Guardar UID Supabase para usar en controllers
+            // 7️⃣ Guardar contexto
             $request->attributes->set('supabase_uid', $payload['sub']);
 
         } catch (\Throwable $e) {
-            return response()->json([
-                'message' => 'Token inválido'
-            ], 401);
+            return response()->json(['message' => 'Token inválido'], 401);
         }
 
         return $next($request);
     }
 }
+

@@ -17,11 +17,11 @@ class UserSeeder extends Seeder
         // User::factory()->count(5)->create();
 
         // Usuario controlado (para Postman)
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@demo.com',
-            'password' => bcrypt('123456'),
-            'status' => 1,
-        ]);
+        // User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@demo.com',
+        //     'password' => bcrypt('123456'),
+        //     'status' => 1,
+        // ]);
     }
 }

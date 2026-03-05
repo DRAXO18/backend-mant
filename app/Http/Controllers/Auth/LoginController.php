@@ -14,86 +14,121 @@ use App\Services\AuthBootstrapService;
 class LoginController extends Controller
 {
 
-    public function login(Request $request, AuthBootstrapService $bootstrap)
+    public function login(Request $request)
     {
         $request->validate([
             'email'    => 'required|email',
             'password' => 'required|string|min:6',
         ]);
 
-        // 1️⃣ Login Supabase (IGUAL)
-        $response = Http::withHeaders([
-            'apikey'       => config('services.supabase.key'),
-            'Content-Type' => 'application/json',
-        ])->post(
-            config('services.supabase.url') . '/auth/v1/token?grant_type=password',
-            [
-                'email'    => $request->email,
-                'password' => $request->password,
-            ]
-        );
+        $credentials = $request->only('email', 'password');
 
-        if (! $response->successful()) {
+        if (! $token = JWTAuth::attempt($credentials)) {
             return response()->json([
                 'message' => 'Credenciales incorrectas'
             ], 401);
         }
 
-        $data = $response->json();
+        $ttl = JWTAuth::factory()->getTTL(); // minutos
 
-        $accessToken  = $data['access_token'];
-        $refreshToken = $data['refresh_token'];
-        $expiresIn    = $data['expires_in'];
-
-        // 2️⃣ 👉 NUEVO: bootstrap Laravel (NO rompe nada)
-        $bootstrap->bootstrap($accessToken);
-
-        // 3️⃣ Cookies (IGUAL)
-        $accessCookie = Cookie::make(
-            'sb_access_token',
-            $accessToken,
-            intval($expiresIn / 60),
+        $cookie = Cookie::make(
+            'token',
+            $token,
+            $ttl,
             '/',
             null,
-            true,
-            true,
             false,
-            'Strict'
-        );
-
-        $refreshCookie = Cookie::make(
-            'sb_refresh_token',
-            $refreshToken,
-            60 * 24 * 30,
-            '/',
-            null,
-            true,
-            true,
+            true,  // httpOnly
             false,
             'Strict'
         );
 
         return response()->json([
             'message' => 'Login exitoso',
-        ])->withCookie($accessCookie)
-            ->withCookie($refreshCookie);
+        ])->withCookie($cookie);
     }
 
-    public function bootstrap(Request $request, AuthBootstrapService $bootstrap)
-    {
-        $token = $request->bearerToken();
+    // Supabase Auth
+    // public function login(Request $request, AuthBootstrapService $bootstrap)
+    // {
+    //     $request->validate([
+    //         'email'    => 'required|email',
+    //         'password' => 'required|string|min:6',
+    //     ]);
 
-        if (! $token) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
+    //     // 1️⃣ Login Supabase (IGUAL)
+    //     $response = Http::withHeaders([
+    //         'apikey'       => config('services.supabase.key'),
+    //         'Content-Type' => 'application/json',
+    //     ])->post(
+    //         config('services.supabase.url') . '/auth/v1/token?grant_type=password',
+    //         [
+    //             'email'    => $request->email,
+    //             'password' => $request->password,
+    //         ]
+    //     );
 
-        $bootstrap->bootstrap($token);
+    //     if (! $response->successful()) {
+    //         return response()->json([
+    //             'message' => 'Credenciales incorrectas'
+    //         ], 401);
+    //     }
 
-        return response()->json([
-            'ok' => true,
-            'message' => 'Bootstrap completado'
-        ]);
-    }
+    //     $data = $response->json();
+
+    //     $accessToken  = $data['access_token'];
+    //     $refreshToken = $data['refresh_token'];
+    //     $expiresIn    = $data['expires_in'];
+
+    //     // 2️⃣ 👉 NUEVO: bootstrap Laravel (NO rompe nada)
+    //     $bootstrap->bootstrap($accessToken);
+
+    //     // 3️⃣ Cookies (IGUAL)
+    //     $accessCookie = Cookie::make(
+    //         'sb_access_token',
+    //         $accessToken,
+    //         intval($expiresIn / 60),
+    //         '/',
+    //         null,
+    //         true,
+    //         true,
+    //         false,
+    //         'Strict'
+    //     );
+
+    //     $refreshCookie = Cookie::make(
+    //         'sb_refresh_token',
+    //         $refreshToken,
+    //         60 * 24 * 30,
+    //         '/',
+    //         null,
+    //         true,
+    //         true,
+    //         false,
+    //         'Strict'
+    //     );
+
+    //     return response()->json([
+    //         'message' => 'Login exitoso',
+    //     ])->withCookie($accessCookie)
+    //         ->withCookie($refreshCookie);
+    // }
+
+    // public function bootstrap(Request $request, AuthBootstrapService $bootstrap)
+    // {
+    //     $token = $request->bearerToken();
+
+    //     if (! $token) {
+    //         return response()->json(['message' => 'Unauthorized'], 401);
+    //     }
+
+    //     $bootstrap->bootstrap($token);
+
+    //     return response()->json([
+    //         'ok' => true,
+    //         'message' => 'Bootstrap completado'
+    //     ]);
+    // }
 
     public function logout(Request $request)
     {

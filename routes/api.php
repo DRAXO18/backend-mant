@@ -21,7 +21,7 @@ Route::get('kardex/productos', [ProductController::class, 'index']);
 Route::post('kardex/productos', [ProductController::class, 'store']);
 
 
-Route::middleware(['supabase.auth'])->group(function () {
+Route::middleware(['auth:api'])->group(function () {
     Route::post('/ecosystem/bootstrap', [LoginController::class, 'bootstrap']);
 
     Route::get('/me', [LoginController::class, 'me']);

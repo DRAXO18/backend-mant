@@ -68,7 +68,6 @@ class VehicleController extends Controller
         ], 201);
     }
 
-
     public function update(Request $request, int $id)
     {
         $vehicle = Vehicle::findOrFail($id);

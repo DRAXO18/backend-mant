@@ -14,7 +14,7 @@ use App\Models\Admin;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * Campos permitidos para asignación masiva
@@ -38,6 +38,8 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'remember_token',
     ];
+
+    protected string $guard_name = 'web';
 
     /**
      * Casts de tipos automáticos

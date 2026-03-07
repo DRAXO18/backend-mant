@@ -4,6 +4,10 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__ . '/../routes/web.php',
@@ -12,19 +16,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+
         $middleware->web(prepend: [
-            \App\Http\Middleware\EncryptCookies::class, // reemplaza el cifrado por el tuyo
+            \App\Http\Middleware\EncryptCookies::class,
         ]);
 
         $middleware->api(append: [
-            \App\Http\Middleware\JWTFromCookie::class, 
-            // \App\Http\Middleware\SupabaseAuth::class, 
+            \App\Http\Middleware\JWTFromCookie::class,
         ]);
 
-        // $middleware->alias([
-        //     'supabase.auth' => \App\Http\Middleware\SupabaseAuth::class,
-        // ]);
+        // 👇 AQUI REGISTRAS LOS ALIAS
+        $middleware->alias([
+            'permission' => PermissionMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

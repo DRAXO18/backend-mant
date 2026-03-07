@@ -29,7 +29,9 @@ class LoginController extends Controller
             ], 401);
         }
 
-        $ttl = JWTAuth::factory()->getTTL(); // minutos
+        $user = auth()->user();
+
+        $ttl = JWTAuth::factory()->getTTL();
 
         $cookie = Cookie::make(
             'token',
@@ -38,14 +40,36 @@ class LoginController extends Controller
             '/',
             null,
             false,
-            true,  // httpOnly
+            true,
             false,
             'Strict'
         );
 
         return response()->json([
-            'message' => 'Login exitoso',
+            'message' => 'Login exitoso'
         ])->withCookie($cookie);
+    }
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthenticated'
+            ], 401);
+        }
+
+        return response()->json([
+            'user' => [
+                'id'     => $user->id,
+                'name'   => $user->name,
+                'email'  => $user->email,
+                'avatar' => $user->avatar,
+            ],
+            'roles' => $user->getRoleNames(),
+            'permissions' => $user->getAllPermissions()->pluck('name'),
+        ]);
     }
 
     // Supabase Auth
@@ -142,26 +166,5 @@ class LoginController extends Controller
             'logout_kardex' => true,
         ])->withCookie($accessCookie)
             ->withCookie($refreshCookie);
-    }
-
-
-    public function me(Request $request)
-    {
-        $user = Auth::user() ?? $request->user();
-
-        if (!$user) {
-            return response()->json([
-                'message' => 'Unauthenticated'
-            ], 401);
-        }
-
-        return response()->json([
-            'user' => [
-                'id'     => $user->id,
-                'name'   => $user->name,
-                'email'  => $user->email,
-                'avatar' => $user->avatar,
-            ],
-        ]);
     }
 }

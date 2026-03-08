@@ -3,16 +3,15 @@
 namespace App\Models\Traits;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Models\Scopes\CompanyScope;
 
 trait BelongsToCompany
 {
     protected static function bootBelongsToCompany()
     {
-        // ACTIVA EL GLOBAL SCOPE
         static::addGlobalScope(new CompanyScope);
 
-        // AUTO RELLENAR AL CREAR
         static::creating(function ($model) {
 
             if (!$model->company_id) {
@@ -28,7 +27,7 @@ trait BelongsToCompany
                 $model->company_id = $companyId;
             }
 
-            if (auth()->check()) {
+            if (auth()->check() && Schema::hasColumn($model->getTable(), 'created_by')) {
                 $model->created_by = auth()->id();
             }
         });

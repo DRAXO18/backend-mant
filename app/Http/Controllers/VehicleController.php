@@ -16,13 +16,17 @@ class VehicleController extends Controller
         $status = $request->input('status', 'active'); // active | deleted | all
 
         $vehicles = Vehicle::query()
-            ->with('owner')
+            ->with([
+                'owner.user:id,name'
+            ])
             ->when($status === 'deleted', fn($q) => $q->onlyTrashed())
             ->when($status === 'all', fn($q) => $q->withTrashed())
             ->when($q !== '', function ($query) use ($q) {
-                $query->where('plate_number', 'like', "%{$q}%")
-                    ->orWhere('brand', 'like', "%{$q}%")
-                    ->orWhere('model', 'like', "%{$q}%");
+                $query->where(function ($q2) use ($q) {
+                    $q2->where('plate_number', 'like', "%{$q}%")
+                        ->orWhere('brand', 'like', "%{$q}%")
+                        ->orWhere('model', 'like', "%{$q}%");
+                });
             })
             ->orderByDesc('id')
             ->paginate($perPage);

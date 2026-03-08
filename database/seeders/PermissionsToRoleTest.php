@@ -13,18 +13,70 @@ class PermissionsToRoleTest extends Seeder
     {
         // crear rol admin si no existe
         $role = Role::firstOrCreate([
-            'name' => 'Admin',
+            'name' => 'Superadmin',
             'guard_name' => 'web'
         ]);
 
         // permisos de vehicles
         $permissions = [
+
+            // users.admin
+            'users.admin.view',
+            'users.admin.create',
+            'users.admin.update',
+            'users.admin.delete',
+
+            // users.client
+            'users.client.view',
+            'users.client.create',
+            'users.client.update',
+            'users.client.delete',
+
+            // users.owner
+            'users.owner.view',
+            'users.owner.create',
+            'users.owner.update',
+            'users.owner.delete',
+
+            // vehicles
             'vehicles.view',
             'vehicles.create',
             'vehicles.update',
-            'vehicles.delete'
-        ];
+            'vehicles.delete',
 
+            // services
+            'services.view',
+            'services.create',
+            'services.update',
+            'services.delete',
+
+            // services.details
+            'services.details.create',
+
+            // service-types
+            'service-types.view',
+            'service-types.create',
+            'service-types.update',
+            'service-types.delete',
+
+            // products
+            'products.view',
+            'products.create',
+            'products.update',
+            'products.delete',
+
+            // roles
+            'roles.view',
+            'roles.create',
+            'roles.update',
+            'roles.delete',
+
+            // permissions
+            'permissions.view',
+            'permissions.create',
+            'permissions.update',
+            'permissions.delete',
+        ];
         foreach ($permissions as $permission) {
             $perm = Permission::where('name', $permission)->first();
 

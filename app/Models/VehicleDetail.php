@@ -4,10 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Scopes\CompanyScope;
+use App\Models\Traits\BelongsToCompany;
+
+
 
 class VehicleDetail extends Model
 {
     use SoftDeletes;
+    use BelongsToCompany;
+
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new CompanyScope);
+    }
 
     protected $primaryKey = 'vehicle_id';
     public $incrementing = false;
@@ -19,6 +30,8 @@ class VehicleDetail extends Model
         'has_glp',
         'weekly_mileage',
         'notes',
+        'company_id',
+
     ];
 
     protected $casts = [

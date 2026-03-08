@@ -95,4 +95,5 @@ class User extends Authenticatable implements JWTSubject
             ->withPivot(['status'])
             ->withTimestamps();
     }
+
 }

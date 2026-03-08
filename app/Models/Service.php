@@ -4,10 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Scopes\CompanyScope;
+use App\Models\Traits\BelongsToCompany;
+
 
 class Service extends Model
 {
     use SoftDeletes;
+    use BelongsToCompany;
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new CompanyScope);
+    }
 
     protected $fillable = [
         'vehicle_id',
@@ -16,6 +25,8 @@ class Service extends Model
         'service_date',
         'mileage_at_service',
         'status',
+        'company_id',
+
     ];
 
     protected $casts = [
@@ -23,7 +34,7 @@ class Service extends Model
         'service_type_id'   => 'integer',
         'client_id'         => 'integer',
         'service_date'      => 'datetime',
-        'mileage_at_service'=> 'integer',
+        'mileage_at_service' => 'integer',
         'status'            => 'integer',
     ];
 
@@ -53,7 +64,6 @@ class Service extends Model
             Part::class,
             'service_parts'
         )->withPivot('quantity')
-         ->withTimestamps();
+            ->withTimestamps();
     }
 }
-

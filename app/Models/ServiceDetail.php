@@ -4,10 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Scopes\CompanyScope;
+use App\Models\Traits\BelongsToCompany;
+
+
 
 class ServiceDetail extends Model
 {
     use SoftDeletes;
+
+    use BelongsToCompany;
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new CompanyScope);
+    }
 
     protected $primaryKey = 'service_id';
     public $incrementing = false;
@@ -16,6 +27,7 @@ class ServiceDetail extends Model
         'service_id',
         'observations',
         'recommendation',
+        'company_id',
     ];
 
     protected $casts = [
@@ -27,4 +39,3 @@ class ServiceDetail extends Model
         return $this->belongsTo(Service::class);
     }
 }
-

@@ -5,7 +5,7 @@ use App\Http\Controllers\Auth\RoleAndPermissionController;
 
 Route::prefix('roles')->group(function () {
 
-    Route::get('/', [RoleAndPermissionController::class, 'getRolesubro'])
+    Route::get('/', [RoleAndPermissionController::class, 'getRoles'])
         ->middleware('permission:roles.view');
 
     Route::post('/create', [RoleAndPermissionController::class, 'createRoles'])
@@ -17,6 +17,8 @@ Route::prefix('roles')->group(function () {
     Route::post('/assign-user', [RoleAndPermissionController::class, 'assignRoleToUser'])
         ->middleware('permission:roles.update');
 
+    // Permisos por rol
+    Route::get('/{role}/permissions', [RoleAndPermissionController::class, 'getPermissionsByRole']);
 });
 
 Route::prefix('permissions')->group(function () {
@@ -26,5 +28,4 @@ Route::prefix('permissions')->group(function () {
 
     Route::post('/create', [RoleAndPermissionController::class, 'createPermissions'])
         ->middleware('permission:permissions.create');
-
 });

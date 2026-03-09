@@ -159,4 +159,11 @@ class RoleAndPermissionController extends Controller
             'permissions' => $permissions,
         ]);
     }
+
+    public function getPermissionsByRole($id)
+    {
+        $role = Role::with('permissions')->findOrFail($id);
+
+        return response()->json($role->permissions);
+    }
 }

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Scopes\CompanyScope;
 use App\Models\Traits\BelongsToCompany;
 
-
 class Service extends Model
 {
     use SoftDeletes;
@@ -22,20 +21,21 @@ class Service extends Model
         'vehicle_id',
         'service_type_id',
         'client_id',
+        'technician_id',
         'service_date',
         'mileage_at_service',
         'status',
         'company_id',
-
     ];
 
     protected $casts = [
-        'vehicle_id'        => 'integer',
-        'service_type_id'   => 'integer',
-        'client_id'         => 'integer',
-        'service_date'      => 'datetime',
+        'vehicle_id'         => 'integer',
+        'service_type_id'    => 'integer',
+        'client_id'          => 'integer',
+        'technician_id'      => 'integer',
+        'service_date'       => 'datetime',
         'mileage_at_service' => 'integer',
-        'status'            => 'integer',
+        'status'             => 'integer',
     ];
 
     public function vehicle()
@@ -46,6 +46,11 @@ class Service extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function technician()
+    {
+        return $this->belongsTo(Technician::class);
     }
 
     public function serviceType()
@@ -64,6 +69,6 @@ class Service extends Model
             Part::class,
             'service_parts'
         )->withPivot('quantity')
-            ->withTimestamps();
+         ->withTimestamps();
     }
 }

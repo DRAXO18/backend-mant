@@ -2,71 +2,78 @@
 
 return [
 
- 'users.admin' => [
-     'view',
-     'create',
-     'update',
-     'delete'
- ],
+    'users.admin' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ],
 
- 'users.client' => [
-     'view',
-     'create',
-     'update',
-     'delete'
- ],
+    'users.client' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ],
 
- 'users.owner' => [
-     'view',
-     'create',
-     'update',
-     'delete'
- ],
+    'users.owner' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ],
 
- 'vehicles' => [
-     'view',
-     'create',
-     'update',
-     'delete'
- ],
+    'users.technician' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ],
 
- 'services' => [
-     'view',
-     'create',
-     'update',
-     'delete'
- ],
+    'vehicles' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ],
 
- 'services.details' => [
-     'create'
- ],
+    'services' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ],
 
- 'service-types' => [
-     'view',
-     'create',
-     'update',
-     'delete'
- ],
+    'services.details' => [
+        'create'
+    ],
 
- 'products' => [
-     'view',
-     'create',
-     'update',
-     'delete'
- ],
+    'service-types' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ],
 
- 'roles' => [
-     'view',
-     'create',
-     'update',
-     'delete'
- ],
+    'products' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ],
 
- 'permissions' => [
-     'view',
-     'create',
-     'update',
-     'delete'
- ]
+    'roles' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ],
+
+    'permissions' => [
+        'view',
+        'create',
+        'update',
+        'delete'
+    ]
 
 ];

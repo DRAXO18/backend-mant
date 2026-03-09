@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Profile\ClientController;
 use App\Http\Controllers\Profile\OwnerController;
 use App\Http\Controllers\Profile\AdminController;
+use App\Http\Controllers\Profile\TechnicianController;
 
 Route::apiResource('clients', ClientController::class)
     ->parameters(['clients' => 'id'])
@@ -30,4 +31,13 @@ Route::apiResource('admins', AdminController::class)
         'store' => 'permission:users.admin.create',
         'update' => 'permission:users.admin.update',
         'destroy' => 'permission:users.admin.delete'
+    ]);
+
+Route::apiResource('technicians', TechnicianController::class)
+    ->parameters(['technicians' => 'id'])
+    ->middleware([
+        'index' => 'permission:users.technician.view',
+        'store' => 'permission:users.technician.create',
+        'update' => 'permission:users.technician.update',
+        'destroy' => 'permission:users.technician.delete'
     ]);

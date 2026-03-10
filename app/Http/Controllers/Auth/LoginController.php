@@ -156,15 +156,18 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        // 1️⃣ Borrar cookies Supabase
-        $accessCookie = Cookie::forget('sb_access_token');
-        $refreshCookie = Cookie::forget('sb_refresh_token');
+        try {
+            // Invalida el token JWT en el servidor
+            JWTAuth::invalidate(JWTAuth::getToken());
+        } catch (\Exception $e) {
+            // Si el token ya expiró o no existe, igual continuamos
+        }
+
+        // Borra la misma cookie que creas en login: 'token'
+        $cookie = Cookie::forget('token');
 
         return response()->json([
-            'message' => 'Sesión cerrada',
-            // frontend de mantenimiento sabrá que debe redirigir a Kardex
-            'logout_kardex' => true,
-        ])->withCookie($accessCookie)
-            ->withCookie($refreshCookie);
+            'message' => 'Sesión cerrada'
+        ])->withCookie($cookie);
     }
 }

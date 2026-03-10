@@ -45,46 +45,47 @@ class AdminController extends Controller
             'data' => $admins,
         ]);
     }
-public function store(Request $request)
-{
-    // Validación
-    $validated = $request->validate([
-        'name'  => ['required', 'string', 'max:255'],
-        'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-        'phone' => ['nullable', 'string', 'max:30'],
-        'password' => ['required', 'string', 'min:8'],
-    ]);
-
-    // Transacción para crear todo
-    $result = DB::transaction(function () use ($validated) {
-
-        $user = User::create([
-            'name'  => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'status' => 1,
-            'password' => bcrypt($validated['password']),
+    
+    public function store(Request $request)
+    {
+        // Validación
+        $validated = $request->validate([
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'password' => ['required', 'string', 'min:8'],
         ]);
 
-        // Generar UID único para Admin
-        do {
-            $uid = 'ADM-' . strtoupper(bin2hex(random_bytes(3))); // ejemplo: ADM-5F3A1C
-        } while (Admin::where('uid', $uid)->exists());
+        // Transacción para crear todo
+        $result = DB::transaction(function () use ($validated) {
 
-        $admin = Admin::create([
-            'user_id' => $user->id,
-            'uid' => $uid,
-        ]);
+            $user = User::create([
+                'name'  => $validated['name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'] ?? null,
+                'status' => 1,
+                'password' => bcrypt($validated['password']),
+            ]);
 
-        return Admin::with('user')->where('id', $admin->id)->first();
-    });
+            // Generar UID único para Admin
+            do {
+                $uid = 'ADM-' . strtoupper(bin2hex(random_bytes(3))); // ejemplo: ADM-5F3A1C
+            } while (Admin::where('uid', $uid)->exists());
 
-    return response()->json([
-        'ok' => true,
-        'message' => 'Admin creado correctamente',
-        'data' => $result,
-    ], 201);
-}
+            $admin = Admin::create([
+                'user_id' => $user->id,
+                'uid' => $uid,
+            ]);
+
+            return Admin::with('user')->where('id', $admin->id)->first();
+        });
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Admin creado correctamente',
+            'data' => $result,
+        ], 201);
+    }
 
     // public function store(Request $request)
     // {

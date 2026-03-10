@@ -166,4 +166,16 @@ class RoleAndPermissionController extends Controller
 
         return response()->json($role->permissions);
     }
+
+    public function getRolesByUser($userId)
+    {
+        $user = User::findOrFail($userId);
+
+        $roles = $user->getRoleNames();
+
+        return response()->json([
+            'ok' => true,
+            'data' => $roles
+        ]);
+    }
 }

@@ -19,6 +19,9 @@ Route::prefix('roles')->group(function () {
 
     // Permisos por rol
     Route::get('/{role}/permissions', [RoleAndPermissionController::class, 'getPermissionsByRole']);
+
+    Route::get('/user/{user}/roles', [RoleAndPermissionController::class, 'getRolesByUser'])
+        ->middleware('permission:roles.view');
 });
 
 Route::prefix('permissions')->group(function () {

@@ -45,10 +45,9 @@ class AdminController extends Controller
             'data' => $admins,
         ]);
     }
-    
+
     public function store(Request $request)
     {
-        // Validación
         $validated = $request->validate([
             'name'  => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
@@ -56,9 +55,18 @@ class AdminController extends Controller
             'password' => ['required', 'string', 'min:8'],
         ]);
 
-        // Transacción para crear todo
         $result = DB::transaction(function () use ($validated) {
 
+            // Empresa del usuario logueado
+            $companyId = auth()->user()
+                ->companies()
+                ->value('companies.id');
+
+            if (!$companyId) {
+                throw new \Exception('User does not belong to a company.');
+            }
+
+            // Crear usuario
             $user = User::create([
                 'name'  => $validated['name'],
                 'email' => $validated['email'],
@@ -67,14 +75,24 @@ class AdminController extends Controller
                 'password' => bcrypt($validated['password']),
             ]);
 
-            // Generar UID único para Admin
+            // Generar UID único
             do {
-                $uid = 'ADM-' . strtoupper(bin2hex(random_bytes(3))); // ejemplo: ADM-5F3A1C
+                $uid = 'ADM-' . strtoupper(bin2hex(random_bytes(3)));
             } while (Admin::where('uid', $uid)->exists());
 
+            // Crear admin
             $admin = Admin::create([
                 'user_id' => $user->id,
                 'uid' => $uid,
+            ]);
+
+            // Registrar pertenencia a la empresa
+            DB::table('company_user')->insert([
+                'company_id' => $companyId,
+                'user_id' => $user->id,
+                'status' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
 
             return Admin::with('user')->where('id', $admin->id)->first();

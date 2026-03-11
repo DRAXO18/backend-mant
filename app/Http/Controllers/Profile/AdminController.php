@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\Admin;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -53,11 +54,12 @@ class AdminController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:8'],
+
+            'role_name' => ['required', 'string'],
         ]);
 
         $result = DB::transaction(function () use ($validated) {
 
-            // Empresa del usuario logueado
             $companyId = auth()->user()
                 ->companies()
                 ->value('companies.id');
@@ -66,7 +68,6 @@ class AdminController extends Controller
                 throw new \Exception('User does not belong to a company.');
             }
 
-            // Crear usuario
             $user = User::create([
                 'name'  => $validated['name'],
                 'email' => $validated['email'],
@@ -75,18 +76,23 @@ class AdminController extends Controller
                 'password' => bcrypt($validated['password']),
             ]);
 
-            // Generar UID único
+            // 🔹 Buscar rol (guard fijo)
+            $role = Role::where('name', $validated['role_name'])
+                ->where('guard_name', 'web')
+                ->firstOrFail();
+
+            // 🔹 Rol único
+            $user->syncRoles([$role]);
+
             do {
                 $uid = 'ADM-' . strtoupper(bin2hex(random_bytes(3)));
             } while (Admin::where('uid', $uid)->exists());
 
-            // Crear admin
             $admin = Admin::create([
                 'user_id' => $user->id,
                 'uid' => $uid,
             ]);
 
-            // Registrar pertenencia a la empresa
             DB::table('company_user')->insert([
                 'company_id' => $companyId,
                 'user_id' => $user->id,
@@ -104,7 +110,6 @@ class AdminController extends Controller
             'data' => $result,
         ], 201);
     }
-
     // public function store(Request $request)
     // {
     //     /*

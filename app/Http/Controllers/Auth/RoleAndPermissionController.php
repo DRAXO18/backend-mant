@@ -125,10 +125,11 @@ class RoleAndPermissionController extends Controller
             ->where('guard_name', $data['guard_name'])
             ->firstOrFail();
 
-        $user->assignRole($role);
+        // 🔑 Aquí está la magia
+        $user->syncRoles([$role]);
 
         return response()->json([
-            'message' => 'Rol asignado al usuario correctamente',
+            'message' => 'Rol asignado correctamente',
             'user_id' => $user->id,
             'role'    => $role->name,
             'guard'   => $role->guard_name,
